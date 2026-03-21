@@ -38,4 +38,4 @@ jobs:
           version: "0.15.2"
 
       - name: Run integration tests
-        run: sudo zig build test
+        run: sudo $(which zig) build test
