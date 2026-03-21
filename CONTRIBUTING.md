@@ -1,6 +1,6 @@
-# Contributing to zoptianetlink
+# Contributing to ZoptiaNetlink
 
-Thank you for your interest in contributing to zoptianetlink. This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to ZoptiaNetlink. This document provides guidelines and instructions for contributing.
 
 ## Building
 
@@ -75,4 +75,4 @@ For security vulnerabilities, do **not** open a public issue. See [SECURITY.md](
 
 ## License
 
-By contributing to zoptianetlink, you agree that your contributions will be licensed under the Apache License 2.0.
+By contributing to ZoptiaNetlink, you agree that your contributions will be licensed under the Apache License 2.0.

@@ -1,4 +1,4 @@
-# zoptianetlink
+# ZoptiaNetlink
 
 **Eine reine Zig-Bibliothek für Linux-Netzwerkverwaltung über Netlink -- [Zoptia](https://zoptia.com)**
 
@@ -11,7 +11,7 @@
 
 ---
 
-`zoptianetlink` ist eine Zig-Netlink-Bibliothek, die direkten, typsicheren Zugriff auf die Linux-Netlink-Socket-Schnittstelle zur Verwaltung von Netzwerkschnittstellen, Routen, Adressen und Nachbarn bietet. Sie dient als programmatische Alternative zu iproute2 und ermoeglicht die Konfiguration aller Aspekte der Linux-Netzwerkverwaltung -- Erstellen und Loeschen von Links, Zuweisen von IP-Adressen, Manipulation von Routing-Tabellen und Aktualisierung von ARP/NDP-Nachbareintraegen -- alles aus nativem Zig-Code ohne C-Abhaengigkeiten und ohne Shell-Aufrufe. Die Bibliothek kommuniziert mit dem Kernel ueber das Netlink-Socket-Protokoll (NETLINK_ROUTE) und bietet die gleiche Low-Level-Kontrolle wie Werkzeuge wie `ip link`, `ip addr`, `ip route` und `ip neigh`, jedoch mit Compile-Zeit-Sicherheit und strukturierter Fehlerbehandlung.
+`ZoptiaNetlink` ist eine Zig-Netlink-Bibliothek, die direkten, typsicheren Zugriff auf die Linux-Netlink-Socket-Schnittstelle zur Verwaltung von Netzwerkschnittstellen, Routen, Adressen und Nachbarn bietet. Sie dient als programmatische Alternative zu iproute2 und ermoeglicht die Konfiguration aller Aspekte der Linux-Netzwerkverwaltung -- Erstellen und Loeschen von Links, Zuweisen von IP-Adressen, Manipulation von Routing-Tabellen und Aktualisierung von ARP/NDP-Nachbareintraegen -- alles aus nativem Zig-Code ohne C-Abhaengigkeiten und ohne Shell-Aufrufe. Die Bibliothek kommuniziert mit dem Kernel ueber das Netlink-Socket-Protokoll (NETLINK_ROUTE) und bietet die gleiche Low-Level-Kontrolle wie Werkzeuge wie `ip link`, `ip addr`, `ip route` und `ip neigh`, jedoch mit Compile-Zeit-Sicherheit und strukturierter Fehlerbehandlung.
 
 ## Funktionen
 

@@ -2,7 +2,7 @@
 
 ## Attack Surface Considerations
 
-zoptianetlink interfaces directly with the Linux netlink subsystem. Many netlink operations require `CAP_NET_ADMIN` or root privileges. Users of this library should be aware of the following:
+ZoptiaNetlink interfaces directly with the Linux netlink subsystem. Many netlink operations require `CAP_NET_ADMIN` or root privileges. Users of this library should be aware of the following:
 
 - Netlink operations can modify host network configuration (interfaces, routes, addresses, neighbors). Ensure that only trusted code paths invoke mutation operations.
 - Running integration tests requires root privileges and will create, modify, and delete network resources on the host.
@@ -16,7 +16,7 @@ zoptianetlink interfaces directly with the Linux netlink subsystem. Many netlink
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability in zoptianetlink, please report it responsibly. **Do not open a public GitHub issue.**
+If you discover a security vulnerability in ZoptiaNetlink, please report it responsibly. **Do not open a public GitHub issue.**
 
 Instead, send an email to:
 
@@ -35,4 +35,4 @@ Please include:
 - **Assessment**: Within 7 days, we will provide an initial assessment of the vulnerability, its severity, and our planned response.
 - **Resolution**: We will work to address confirmed vulnerabilities as quickly as possible, and will coordinate with you on disclosure timing.
 
-We appreciate your help in keeping zoptianetlink and its users safe.
+We appreciate your help in keeping ZoptiaNetlink and its users safe.

@@ -1,4 +1,4 @@
-# zoptianetlink
+# ZoptiaNetlink
 
 **순수 Zig로 구현한 Linux netlink 네트워크 관리 라이브러리 -- [Zoptia](https://zoptia.com)**
 
@@ -11,7 +11,7 @@
 
 ---
 
-`zoptianetlink`는 Linux netlink 소켓 인터페이스에 대한 직접적이고 타입 안전한 접근을 제공하는 순수 Zig netlink 라이브러리입니다. 네트워크 인터페이스, 라우트, 주소, 이웃 테이블을 관리하는 데 사용할 수 있습니다. iproute2의 프로그래밍 대안으로서, 링크 생성 및 삭제, IP 주소 할당, 라우팅 테이블 조작, ARP/NDP 이웃 항목 업데이트 등 Linux 네트워크 관리의 모든 측면을 C 의존성 없이, 외부 명령 호출 없이, 네이티브 Zig 코드로 구성할 수 있습니다. 이 라이브러리는 netlink 소켓 프로토콜(NETLINK_ROUTE)을 통해 커널과 통신하며, `ip link`, `ip addr`, `ip route`, `ip neigh`와 같은 도구가 제공하는 것과 동일한 저수준 제어를 컴파일 시점 안전성과 구조화된 오류 처리와 함께 제공합니다.
+`ZoptiaNetlink`는 Linux netlink 소켓 인터페이스에 대한 직접적이고 타입 안전한 접근을 제공하는 순수 Zig netlink 라이브러리입니다. 네트워크 인터페이스, 라우트, 주소, 이웃 테이블을 관리하는 데 사용할 수 있습니다. iproute2의 프로그래밍 대안으로서, 링크 생성 및 삭제, IP 주소 할당, 라우팅 테이블 조작, ARP/NDP 이웃 항목 업데이트 등 Linux 네트워크 관리의 모든 측면을 C 의존성 없이, 외부 명령 호출 없이, 네이티브 Zig 코드로 구성할 수 있습니다. 이 라이브러리는 netlink 소켓 프로토콜(NETLINK_ROUTE)을 통해 커널과 통신하며, `ip link`, `ip addr`, `ip route`, `ip neigh`와 같은 도구가 제공하는 것과 동일한 저수준 제어를 컴파일 시점 안전성과 구조화된 오류 처리와 함께 제공합니다.
 
 ## 기능
 
