@@ -5,15 +5,19 @@ const native_endian = @import("builtin").cpu.arch.endian();
 
 pub const NeighError = error{
     NetlinkError,
+    SocketOpenFailed,
+    BindFailed,
     SendFailed,
+    RecvFailed,
     ShortRead,
     WrongSenderPid,
     InvalidMessage,
     GetSockNameFailed,
     OutOfMemory,
     SocketError,
+    DumpInterrupted,
     Unexpected,
-} || std.posix.SocketError || std.posix.BindError;
+};
 
 // neighAdd adds an IP to MAC mapping to the ARP table.
 // Equivalent to: `ip neigh add ...`
@@ -122,7 +126,7 @@ pub fn neighList(sock: *nl.NetlinkSocket, link_index: i32, family: u8, allocator
         allocator.free(msgs);
     }
 
-    var neighs: std.ArrayList(types.Neigh) = .{};
+    var neighs: std.ArrayList(types.Neigh) = .empty;
     errdefer neighs.deinit(allocator);
 
     for (msgs) |data| {

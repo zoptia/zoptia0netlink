@@ -110,6 +110,22 @@ pub const LinkAttrs = struct {
     link_type: LinkType = .device,
     encap_type: [32]u8 = [_]u8{0} ** 32,
     encap_type_len: u8 = 0,
+    // Generic IFLA_HEADROOM / IFLA_TAILROOM (query-only).
+    headroom: u16 = 0,
+    tailroom: u16 = 0,
+
+    // VLAN-specific (used when link_type == .vlan).
+    vlan_id: u16 = 0,
+    vlan_proto: u16 = 0,
+    vlan_flags: u32 = 0,
+    vlan_flags_mask: u32 = 0,
+
+    // GRE-specific (used for gretap/gretun).
+    gre_ignore_df: ?bool = null,
+
+    // VXLAN-specific.
+    vxlan_id: u32 = 0,
+    vxlan_vni_filter: ?bool = null,
 
     pub fn getName(self: *const LinkAttrs) []const u8 {
         return self.name[0..self.name_len];
@@ -277,6 +293,19 @@ pub const IPNet = struct {
     }
 };
 
+// Ip6tnlEncap describes an IPv6 LWT tunnel encapsulation attached to a route.
+// Wire format: RTA_ENCAP_TYPE = LWTUNNEL_ENCAP_IP6, RTA_ENCAP = nested
+// LWTUNNEL_IP6_* attributes. ID and FLAGS are transmitted in network byte
+// order; matches the upstream IP6tnlEncap fix.
+pub const Ip6tnlEncap = struct {
+    id: u64 = 0,
+    dst: ?[16]u8 = null,
+    src: ?[16]u8 = null,
+    hoplimit: u8 = 0,
+    tc: u8 = 0,
+    flags: u16 = 0,
+};
+
 // Route represents a netlink route.
 pub const Route = struct {
     link_index: i32 = 0,
@@ -292,6 +321,10 @@ pub const Route = struct {
     tos: u8 = 0,
     flags: u32 = 0,
     mtu: u32 = 0,
+    // RTA_EXPIRES: lifetime of the route in seconds; null = not set.
+    expires: ?u32 = null,
+    // LWT IP6 tunnel encapsulation; null = not set.
+    encap_ip6: ?Ip6tnlEncap = null,
 
     pub fn eql(self: *const Route, other: *const Route) bool {
         var dst_eq = false;

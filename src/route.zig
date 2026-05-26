@@ -5,15 +5,19 @@ const native_endian = @import("builtin").cpu.arch.endian();
 
 pub const RouteError = error{
     NetlinkError,
+    SocketOpenFailed,
+    BindFailed,
     SendFailed,
+    RecvFailed,
     ShortRead,
     WrongSenderPid,
     InvalidMessage,
     GetSockNameFailed,
     OutOfMemory,
     SocketError,
+    DumpInterrupted,
     Unexpected,
-} || std.posix.SocketError || std.posix.BindError;
+};
 
 // routeAdd adds a new route.
 // Equivalent to: `ip route add $route`
@@ -110,6 +114,28 @@ fn routeHandle(sock: *nl.NetlinkSocket, route: *const types.Route, req: *nl.Netl
         req.addRtAttr(&table_attr);
     }
 
+    // RTA_EXPIRES (lifetime in seconds, kernel ignores 0)
+    if (route.expires) |expires| {
+        const val = nl.uint32Attr(expires);
+        var exp_attr = nl.RtAttr.init(std.heap.page_allocator, nl.RTA_EXPIRES, &val);
+        defer exp_attr.deinit();
+        req.addRtAttr(&exp_attr);
+    }
+
+    // RTA_ENCAP_TYPE + RTA_ENCAP for IP6 LWT tunnel encapsulation.
+    if (route.encap_ip6) |encap| {
+        const type_val = nl.uint16Attr(nl.LWTUNNEL_ENCAP_IP6);
+        var type_attr = nl.RtAttr.init(std.heap.page_allocator, nl.RTA_ENCAP_TYPE, &type_val);
+        defer type_attr.deinit();
+        req.addRtAttr(&type_attr);
+
+        var encap_buf: [128]u8 = undefined;
+        const encap_len = encodeIp6tnlEncap(&encap_buf, encap);
+        var encap_attr = nl.RtAttr.init(std.heap.page_allocator, nl.RTA_ENCAP | nl.NLA_F_NESTED, encap_buf[0..encap_len]);
+        defer encap_attr.deinit();
+        req.addRtAttr(&encap_attr);
+    }
+
     const result = req.executeAlloc(sock, std.heap.page_allocator) catch return error.NetlinkError;
     for (result) |item| std.heap.page_allocator.free(item);
     std.heap.page_allocator.free(result);
@@ -131,7 +157,7 @@ pub fn routeList(sock: *nl.NetlinkSocket, family: u8, allocator: std.mem.Allocat
         allocator.free(msgs);
     }
 
-    var routes: std.ArrayList(types.Route) = .{};
+    var routes: std.ArrayList(types.Route) = .empty;
     errdefer routes.deinit(allocator);
 
     for (msgs) |data| {
@@ -148,7 +174,7 @@ pub fn routeListFiltered(sock: *nl.NetlinkSocket, family: u8, link_index: i32, a
     const all_routes = try routeList(sock, family, allocator);
     defer allocator.free(all_routes);
 
-    var routes: std.ArrayList(types.Route) = .{};
+    var routes: std.ArrayList(types.Route) = .empty;
     errdefer routes.deinit(allocator);
 
     for (all_routes) |route_val| {
@@ -158,6 +184,83 @@ pub fn routeListFiltered(sock: *nl.NetlinkSocket, family: u8, link_index: i32, a
     }
 
     return try routes.toOwnedSlice(allocator);
+}
+
+// Serialize an Ip6tnlEncap as a sequence of LWTUNNEL_IP6_* attributes into
+// `buf`, matching the wire format used by the kernel (ID and FLAGS in network
+// byte order). Returns the number of bytes written.
+fn encodeIp6tnlEncap(buf: []u8, encap: types.Ip6tnlEncap) u32 {
+    const alloc = std.heap.page_allocator;
+    var off: u32 = 0;
+
+    // LWTUNNEL_IP6_ID (u64, big-endian on the wire).
+    var id_buf: [8]u8 = undefined;
+    std.mem.writeInt(u64, &id_buf, encap.id, .big);
+    var id_attr = nl.RtAttr.init(alloc, nl.LWTUNNEL_IP6_ID, &id_buf);
+    off += nl.rtaAlign(id_attr.serialize(buf[off..]));
+    id_attr.deinit();
+
+    if (encap.dst) |dst| {
+        var dst_attr = nl.RtAttr.init(alloc, nl.LWTUNNEL_IP6_DST, &dst);
+        off += nl.rtaAlign(dst_attr.serialize(buf[off..]));
+        dst_attr.deinit();
+    }
+    if (encap.src) |src| {
+        var src_attr = nl.RtAttr.init(alloc, nl.LWTUNNEL_IP6_SRC, &src);
+        off += nl.rtaAlign(src_attr.serialize(buf[off..]));
+        src_attr.deinit();
+    }
+
+    const hop = nl.uint8Attr(encap.hoplimit);
+    var hop_attr = nl.RtAttr.init(alloc, nl.LWTUNNEL_IP6_HOPLIMIT, &hop);
+    off += nl.rtaAlign(hop_attr.serialize(buf[off..]));
+    hop_attr.deinit();
+
+    const tc = nl.uint8Attr(encap.tc);
+    var tc_attr = nl.RtAttr.init(alloc, nl.LWTUNNEL_IP6_TC, &tc);
+    off += nl.rtaAlign(tc_attr.serialize(buf[off..]));
+    tc_attr.deinit();
+
+    // FLAGS is u16, network byte order.
+    const flags_be = nl.uint16AttrBE(encap.flags);
+    var flags_attr = nl.RtAttr.init(alloc, nl.LWTUNNEL_IP6_FLAGS, &flags_be);
+    off += nl.rtaAlign(flags_attr.serialize(buf[off..]));
+    flags_attr.deinit();
+
+    return off;
+}
+
+fn decodeIp6tnlEncap(data: []const u8) types.Ip6tnlEncap {
+    var encap = types.Ip6tnlEncap{};
+    var iter = nl.parseAttrs(data);
+    while (iter.next()) |attr| {
+        switch (attr.type_) {
+            nl.LWTUNNEL_IP6_ID => {
+                if (attr.data.len >= 8) {
+                    encap.id = std.mem.readInt(u64, attr.data[0..8], .big);
+                }
+            },
+            nl.LWTUNNEL_IP6_DST => {
+                if (attr.data.len == 16) encap.dst = attr.data[0..16].*;
+            },
+            nl.LWTUNNEL_IP6_SRC => {
+                if (attr.data.len == 16) encap.src = attr.data[0..16].*;
+            },
+            nl.LWTUNNEL_IP6_HOPLIMIT => {
+                if (attr.data.len >= 1) encap.hoplimit = attr.data[0];
+            },
+            nl.LWTUNNEL_IP6_TC => {
+                if (attr.data.len >= 1) encap.tc = attr.data[0];
+            },
+            nl.LWTUNNEL_IP6_FLAGS => {
+                if (attr.data.len >= 2) {
+                    encap.flags = std.mem.readInt(u16, attr.data[0..2], .big);
+                }
+            },
+            else => {},
+        }
+    }
+    return encap;
 }
 
 fn parseRouteMsg(data: []const u8) types.Route {
@@ -199,6 +302,16 @@ fn parseRouteMsg(data: []const u8) types.Route {
             },
             nl.RTA_TABLE => {
                 if (attr.data.len >= 4) route.table = nl.readUint32(attr.data);
+            },
+            nl.RTA_EXPIRES => {
+                if (attr.data.len >= 4) route.expires = nl.readUint32(attr.data);
+            },
+            nl.RTA_ENCAP_TYPE => {
+                // Captured for later use; actual decode happens on RTA_ENCAP.
+            },
+            nl.RTA_ENCAP => {
+                // Only IP6 LWT encap is decoded; other encap types are ignored.
+                route.encap_ip6 = decodeIp6tnlEncap(attr.data);
             },
             else => {},
         }

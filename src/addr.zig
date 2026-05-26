@@ -5,15 +5,19 @@ const native_endian = @import("builtin").cpu.arch.endian();
 
 pub const AddrError = error{
     NetlinkError,
+    SocketOpenFailed,
+    BindFailed,
     SendFailed,
+    RecvFailed,
     ShortRead,
     WrongSenderPid,
     InvalidMessage,
     GetSockNameFailed,
     OutOfMemory,
     SocketError,
+    DumpInterrupted,
     Unexpected,
-} || std.posix.SocketError || std.posix.BindError;
+};
 
 // addrAdd adds an IP address to a link device.
 // Equivalent to: `ip addr add $addr dev $link`
@@ -134,6 +138,12 @@ pub fn addrList(sock: *nl.NetlinkSocket, link_index: i32, family: u8, allocator:
     var msg = nl.IfAddrMsg{
         .family = family,
     };
+    // Ask the kernel to filter by ifindex when possible. Requires
+    // NETLINK_GET_STRICT_CHK on the socket; otherwise the kernel ignores
+    // this field and the userspace filter below serves as fallback.
+    if (link_index != 0) {
+        msg.index = @bitCast(link_index);
+    }
     req.addData(std.mem.asBytes(&msg));
 
     const msgs = try req.executeAlloc(sock, allocator);
@@ -142,7 +152,7 @@ pub fn addrList(sock: *nl.NetlinkSocket, link_index: i32, family: u8, allocator:
         allocator.free(msgs);
     }
 
-    var addrs: std.ArrayList(types.Addr) = .{};
+    var addrs: std.ArrayList(types.Addr) = .empty;
     errdefer addrs.deinit(allocator);
 
     for (msgs) |data| {

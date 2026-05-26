@@ -10,7 +10,7 @@ Build the library with:
 zig build
 ```
 
-The minimum supported Zig version is 0.14.0.
+The minimum supported Zig version is 0.16.0.
 
 ## Testing
 

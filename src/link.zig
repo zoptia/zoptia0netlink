@@ -5,15 +5,19 @@ const native_endian = @import("builtin").cpu.arch.endian();
 
 pub const LinkAddError = error{
     NetlinkError,
+    SocketOpenFailed,
+    BindFailed,
     SendFailed,
+    RecvFailed,
     ShortRead,
     WrongSenderPid,
     InvalidMessage,
     GetSockNameFailed,
     OutOfMemory,
     SocketError,
+    DumpInterrupted,
     Unexpected,
-} || std.posix.SocketError || std.posix.BindError;
+};
 
 pub const LinkError = LinkAddError || error{
     LinkNotFound,
@@ -94,26 +98,89 @@ pub fn linkAdd(sock: *nl.NetlinkSocket, attrs: *const types.LinkAttrs) LinkAddEr
 }
 
 fn addLinkInfo(req: *nl.NetlinkRequest, attrs: *const types.LinkAttrs) void {
-    // build IFLA_LINKINFO manually
+    const alloc = std.heap.page_allocator;
     const kind_name = attrs.link_type.toString();
 
-    // IFLA_INFO_KIND attribute
-    var kind_attr = nl.RtAttr.init(std.heap.page_allocator, nl.IFLA_INFO_KIND, kind_name);
+    // Compose IFLA_LINKINFO payload manually: IFLA_INFO_KIND followed by
+    // an optional IFLA_INFO_DATA for type-specific attributes.
+    var linkinfo_buf: [1024]u8 = undefined;
+    var off: u32 = 0;
+
+    var kind_attr = nl.RtAttr.init(alloc, nl.IFLA_INFO_KIND, kind_name);
     defer kind_attr.deinit();
+    off += nl.rtaAlign(kind_attr.serialize(linkinfo_buf[off..]));
 
-    // IFLA_LINKINFO container (nested)
-    var linkinfo = nl.RtAttr.init(std.heap.page_allocator, nl.IFLA_LINKINFO, null);
-    defer linkinfo.deinit();
+    var info_data_buf: [512]u8 = undefined;
+    const info_data_len = buildInfoData(&info_data_buf, attrs);
+    if (info_data_len > 0) {
+        var data_attr = nl.RtAttr.init(alloc, nl.IFLA_INFO_DATA | nl.NLA_F_NESTED, info_data_buf[0..info_data_len]);
+        defer data_attr.deinit();
+        off += nl.rtaAlign(data_attr.serialize(linkinfo_buf[off..]));
+    }
 
-    // Serialize kind_attr into linkinfo's data
-    var kind_buf: [256]u8 = undefined;
-    const kind_len = kind_attr.serialize(&kind_buf);
-
-    // Now build the linkinfo attr manually
-    var li_attr = nl.RtAttr.init(std.heap.page_allocator, nl.IFLA_LINKINFO | nl.NLA_F_NESTED, kind_buf[0..kind_len]);
+    var li_attr = nl.RtAttr.init(alloc, nl.IFLA_LINKINFO | nl.NLA_F_NESTED, linkinfo_buf[0..off]);
     defer li_attr.deinit();
-
     req.addRtAttr(&li_attr);
+}
+
+// Build the IFLA_INFO_DATA payload (a sequence of type-specific rtattrs)
+// for the link type in attrs. Returns the number of bytes written.
+fn buildInfoData(buf: []u8, attrs: *const types.LinkAttrs) u32 {
+    return switch (attrs.link_type) {
+        .vlan => buildVlanData(buf, attrs),
+        .gretap, .gretun => buildGreData(buf, attrs),
+        .vxlan => buildVxlanData(buf, attrs),
+        else => 0,
+    };
+}
+
+fn appendAttr(buf: []u8, off: u32, attr_type: u16, data: []const u8) u32 {
+    var a = nl.RtAttr.init(std.heap.page_allocator, attr_type, data);
+    defer a.deinit();
+    return off + nl.rtaAlign(a.serialize(buf[off..]));
+}
+
+fn buildVlanData(buf: []u8, attrs: *const types.LinkAttrs) u32 {
+    var off: u32 = 0;
+    if (attrs.vlan_id > 0) {
+        const val = nl.uint16Attr(attrs.vlan_id);
+        off = appendAttr(buf, off, nl.IFLA_VLAN_ID, &val);
+    }
+    if (attrs.vlan_proto > 0) {
+        // IFLA_VLAN_PROTOCOL is sent in network byte order.
+        const val = nl.uint16AttrBE(attrs.vlan_proto);
+        off = appendAttr(buf, off, nl.IFLA_VLAN_PROTOCOL, &val);
+    }
+    if (attrs.vlan_flags_mask != 0) {
+        const payload = nl.VlanFlagsPayload{
+            .flags = attrs.vlan_flags,
+            .mask = attrs.vlan_flags_mask,
+        };
+        off = appendAttr(buf, off, nl.IFLA_VLAN_FLAGS, std.mem.asBytes(&payload));
+    }
+    return off;
+}
+
+fn buildGreData(buf: []u8, attrs: *const types.LinkAttrs) u32 {
+    var off: u32 = 0;
+    if (attrs.gre_ignore_df) |ignore| {
+        const val = nl.uint8Attr(if (ignore) 1 else 0);
+        off = appendAttr(buf, off, nl.IFLA_GRE_IGNORE_DF, &val);
+    }
+    return off;
+}
+
+fn buildVxlanData(buf: []u8, attrs: *const types.LinkAttrs) u32 {
+    var off: u32 = 0;
+    if (attrs.vxlan_id > 0) {
+        const val = nl.uint32Attr(attrs.vxlan_id);
+        off = appendAttr(buf, off, nl.IFLA_VXLAN_ID, &val);
+    }
+    if (attrs.vxlan_vni_filter) |on| {
+        const val = nl.uint8Attr(if (on) 1 else 0);
+        off = appendAttr(buf, off, nl.IFLA_VXLAN_VNIFILTER, &val);
+    }
+    return off;
 }
 
 // linkDel removes a link device.
@@ -148,7 +215,7 @@ pub fn linkList(sock: *nl.NetlinkSocket, allocator: std.mem.Allocator) ![]types.
         allocator.free(msgs);
     }
 
-    var links: std.ArrayList(types.LinkAttrs) = .{};
+    var links: std.ArrayList(types.LinkAttrs) = .empty;
     errdefer links.deinit(allocator);
 
     for (msgs) |data| {
@@ -239,6 +306,12 @@ fn parseLinkMsg(data: []const u8) types.LinkAttrs {
                 @memcpy(attrs.alias[0..len], attr.data[0..len]);
                 attrs.alias_len = @intCast(len);
             },
+            nl.IFLA_HEADROOM => {
+                if (attr.data.len >= 2) attrs.headroom = nl.readUint16(attr.data);
+            },
+            nl.IFLA_TAILROOM => {
+                if (attr.data.len >= 2) attrs.tailroom = nl.readUint16(attr.data);
+            },
             else => {},
         }
     }
@@ -248,11 +321,79 @@ fn parseLinkMsg(data: []const u8) types.LinkAttrs {
 
 fn parseLinkInfo(data: []const u8, attrs: *types.LinkAttrs) void {
     var iter = nl.parseAttrs(data);
+    var info_data: ?[]const u8 = null;
     while (iter.next()) |attr| {
         switch (attr.type_) {
             nl.IFLA_INFO_KIND => {
                 const end = std.mem.indexOfScalar(u8, attr.data, 0) orelse attr.data.len;
                 attrs.link_type = types.LinkType.fromString(attr.data[0..end]);
+            },
+            nl.IFLA_INFO_DATA => {
+                info_data = attr.data;
+            },
+            else => {},
+        }
+    }
+
+    if (info_data) |d| parseInfoData(d, attrs);
+}
+
+fn parseInfoData(data: []const u8, attrs: *types.LinkAttrs) void {
+    switch (attrs.link_type) {
+        .vlan => parseVlanData(data, attrs),
+        .gretap, .gretun => parseGreData(data, attrs),
+        .vxlan => parseVxlanData(data, attrs),
+        else => {},
+    }
+}
+
+fn parseVlanData(data: []const u8, attrs: *types.LinkAttrs) void {
+    var iter = nl.parseAttrs(data);
+    while (iter.next()) |attr| {
+        switch (attr.type_) {
+            nl.IFLA_VLAN_ID => {
+                if (attr.data.len >= 2) attrs.vlan_id = nl.readUint16(attr.data);
+            },
+            nl.IFLA_VLAN_PROTOCOL => {
+                // network byte order on the wire
+                if (attr.data.len >= 2) {
+                    attrs.vlan_proto = std.mem.readInt(u16, attr.data[0..2], .big);
+                }
+            },
+            nl.IFLA_VLAN_FLAGS => {
+                if (attr.data.len >= @sizeOf(nl.VlanFlagsPayload)) {
+                    var payload: nl.VlanFlagsPayload = undefined;
+                    @memcpy(std.mem.asBytes(&payload), attr.data[0..@sizeOf(nl.VlanFlagsPayload)]);
+                    attrs.vlan_flags = payload.flags;
+                    attrs.vlan_flags_mask = payload.mask;
+                }
+            },
+            else => {},
+        }
+    }
+}
+
+fn parseGreData(data: []const u8, attrs: *types.LinkAttrs) void {
+    var iter = nl.parseAttrs(data);
+    while (iter.next()) |attr| {
+        switch (attr.type_) {
+            nl.IFLA_GRE_IGNORE_DF => {
+                if (attr.data.len >= 1) attrs.gre_ignore_df = attr.data[0] != 0;
+            },
+            else => {},
+        }
+    }
+}
+
+fn parseVxlanData(data: []const u8, attrs: *types.LinkAttrs) void {
+    var iter = nl.parseAttrs(data);
+    while (iter.next()) |attr| {
+        switch (attr.type_) {
+            nl.IFLA_VXLAN_ID => {
+                if (attr.data.len >= 4) attrs.vxlan_id = nl.readUint32(attr.data);
+            },
+            nl.IFLA_VXLAN_VNIFILTER => {
+                if (attr.data.len >= 1) attrs.vxlan_vni_filter = attr.data[0] != 0;
             },
             else => {},
         }

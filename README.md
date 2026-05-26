@@ -2,7 +2,7 @@
 
 **A pure Zig netlink library for Linux network management -- by [Zoptia](https://zoptia.com)**
 
-[![Zig 0.15+](https://img.shields.io/badge/Zig-0.15%2B-f7a41d?logo=zig&logoColor=white)](https://ziglang.org)
+[![Zig 0.16+](https://img.shields.io/badge/Zig-0.16%2B-f7a41d?logo=zig&logoColor=white)](https://ziglang.org)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Linux only](https://img.shields.io/badge/Platform-Linux-lightgrey.svg)]()
 [![CI](https://img.shields.io/badge/CI-passing-brightgreen.svg)]()
@@ -265,7 +265,7 @@ try netlink.neighAdd(&sock, &neigh);
 
 - **Linux** -- This library uses the Linux netlink interface and is not portable to other operating systems.
 - **Root privileges** -- Most netlink operations that modify network configuration require `CAP_NET_ADMIN` or root access. Read-only operations (listing interfaces, addresses, routes, neighbors) may work without elevated privileges.
-- **Zig 0.15+** -- Built and tested with Zig 0.15. The minimum version specified in `build.zig.zon` is 0.14.0, but 0.15+ is recommended.
+- **Zig 0.16+** -- Built and tested with Zig 0.16. The minimum version specified in `build.zig.zon` is 0.16.0.
 
 ## Testing
 

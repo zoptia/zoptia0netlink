@@ -16,7 +16,10 @@ pub const NETLINK_ROUTE: u32 = 0;
 pub const NETLINK_XFRM: u32 = 6;
 pub const NETLINK_NETFILTER: u32 = 12;
 pub const NETLINK_GET_STRICT_CHK: u32 = 12;
+pub const NETLINK_EXT_ACK: u32 = 11;
 pub const SOL_NETLINK: u32 = 270;
+
+pub const MAX_DUMP_RETRIES: u8 = 10;
 
 pub const NLM_F_REQUEST: u16 = 0x0001;
 pub const NLM_F_MULTI: u16 = 0x0002;
@@ -121,6 +124,9 @@ pub const IFLA_ALLMULTI: u16 = 61;
 pub const IFLA_GSO_IPV4_MAX_SIZE: u16 = 63;
 pub const IFLA_GRO_IPV4_MAX_SIZE: u16 = 64;
 pub const IFLA_ALT_IFNAME: u16 = 53;
+// Generic headroom/tailroom (query-only, Linux 6.x).
+pub const IFLA_HEADROOM: u16 = 0x44;
+pub const IFLA_TAILROOM: u16 = 0x45;
 
 // IFLA_INFO attribute types
 pub const IFLA_INFO_UNSPEC: u16 = 0;
@@ -129,6 +135,80 @@ pub const IFLA_INFO_DATA: u16 = 2;
 pub const IFLA_INFO_XSTATS: u16 = 3;
 pub const IFLA_INFO_SLAVE_KIND: u16 = 4;
 pub const IFLA_INFO_SLAVE_DATA: u16 = 5;
+
+// VLAN-specific attributes (inside IFLA_INFO_DATA for kind "vlan").
+pub const IFLA_VLAN_UNSPEC: u16 = 0;
+pub const IFLA_VLAN_ID: u16 = 1;
+pub const IFLA_VLAN_FLAGS: u16 = 2;
+pub const IFLA_VLAN_EGRESS_QOS: u16 = 3;
+pub const IFLA_VLAN_INGRESS_QOS: u16 = 4;
+pub const IFLA_VLAN_PROTOCOL: u16 = 5;
+pub const VLAN_FLAG_REORDER_HDR: u32 = 0x1;
+pub const VLAN_FLAG_GVRP: u32 = 0x2;
+pub const VLAN_FLAG_LOOSE_BINDING: u32 = 0x4;
+pub const VLAN_FLAG_MVRP: u32 = 0x8;
+pub const VLAN_FLAG_BRIDGE_BINDING: u32 = 0x10;
+// IFLA_VLAN_FLAGS payload is {flags:u32, mask:u32}.
+pub const VlanFlagsPayload = extern struct {
+    flags: u32,
+    mask: u32,
+};
+
+// GRE-specific attributes (kinds "gre" and "gretap").
+pub const IFLA_GRE_UNSPEC: u16 = 0;
+pub const IFLA_GRE_LINK: u16 = 1;
+pub const IFLA_GRE_IFLAGS: u16 = 2;
+pub const IFLA_GRE_OFLAGS: u16 = 3;
+pub const IFLA_GRE_IKEY: u16 = 4;
+pub const IFLA_GRE_OKEY: u16 = 5;
+pub const IFLA_GRE_LOCAL: u16 = 6;
+pub const IFLA_GRE_REMOTE: u16 = 7;
+pub const IFLA_GRE_TTL: u16 = 8;
+pub const IFLA_GRE_TOS: u16 = 9;
+pub const IFLA_GRE_PMTUDISC: u16 = 10;
+pub const IFLA_GRE_ENCAP_LIMIT: u16 = 11;
+pub const IFLA_GRE_FLOWINFO: u16 = 12;
+pub const IFLA_GRE_FLAGS: u16 = 13;
+pub const IFLA_GRE_ENCAP_TYPE: u16 = 14;
+pub const IFLA_GRE_ENCAP_FLAGS: u16 = 15;
+pub const IFLA_GRE_ENCAP_SPORT: u16 = 16;
+pub const IFLA_GRE_ENCAP_DPORT: u16 = 17;
+pub const IFLA_GRE_COLLECT_METADATA: u16 = 18;
+pub const IFLA_GRE_IGNORE_DF: u16 = 19;
+
+// VXLAN-specific attributes (kind "vxlan").
+pub const IFLA_VXLAN_UNSPEC: u16 = 0;
+pub const IFLA_VXLAN_ID: u16 = 1;
+pub const IFLA_VXLAN_GROUP: u16 = 2;
+pub const IFLA_VXLAN_LINK: u16 = 3;
+pub const IFLA_VXLAN_LOCAL: u16 = 4;
+pub const IFLA_VXLAN_TTL: u16 = 5;
+pub const IFLA_VXLAN_TOS: u16 = 6;
+pub const IFLA_VXLAN_LEARNING: u16 = 7;
+pub const IFLA_VXLAN_AGEING: u16 = 8;
+pub const IFLA_VXLAN_LIMIT: u16 = 9;
+pub const IFLA_VXLAN_PORT_RANGE: u16 = 10;
+pub const IFLA_VXLAN_PROXY: u16 = 11;
+pub const IFLA_VXLAN_RSC: u16 = 12;
+pub const IFLA_VXLAN_L2MISS: u16 = 13;
+pub const IFLA_VXLAN_L3MISS: u16 = 14;
+pub const IFLA_VXLAN_PORT: u16 = 15;
+pub const IFLA_VXLAN_GROUP6: u16 = 16;
+pub const IFLA_VXLAN_LOCAL6: u16 = 17;
+pub const IFLA_VXLAN_UDP_CSUM: u16 = 18;
+pub const IFLA_VXLAN_UDP_ZERO_CSUM6_TX: u16 = 19;
+pub const IFLA_VXLAN_UDP_ZERO_CSUM6_RX: u16 = 20;
+pub const IFLA_VXLAN_REMCSUM_TX: u16 = 21;
+pub const IFLA_VXLAN_REMCSUM_RX: u16 = 22;
+pub const IFLA_VXLAN_GBP: u16 = 23;
+pub const IFLA_VXLAN_REMCSUM_NOPARTIAL: u16 = 24;
+pub const IFLA_VXLAN_FLOWBASED: u16 = 25;
+pub const IFLA_VXLAN_LABEL: u16 = 26;
+pub const IFLA_VXLAN_GPE: u16 = 27;
+pub const IFLA_VXLAN_TTL_INHERIT: u16 = 28;
+pub const IFLA_VXLAN_DF: u16 = 29;
+pub const IFLA_VXLAN_VNIFILTER: u16 = 30;
+pub const IFLA_VXLAN_LOCALBYPASS: u16 = 31;
 
 // IFA attribute types
 pub const IFA_UNSPEC: u16 = 0;
@@ -159,9 +239,35 @@ pub const RTA_CACHEINFO: u16 = 12;
 pub const RTA_SESSION: u16 = 13;
 pub const RTA_TABLE: u16 = 15;
 pub const RTA_OIF_NH: u16 = 4;
+pub const RTA_MARK: u16 = 16;
+pub const RTA_MFC_STATS: u16 = 17;
+pub const RTA_VIA: u16 = 18;
+pub const RTA_NEWDST: u16 = 19;
+pub const RTA_PREF: u16 = 20;
 pub const RTA_ENCAP_TYPE: u16 = 21;
 pub const RTA_ENCAP: u16 = 22;
+pub const RTA_EXPIRES: u16 = 23;
 pub const RTA_NH_ID: u16 = 30;
+
+// LWT tunnel encapsulation types (RTA_ENCAP_TYPE values).
+pub const LWTUNNEL_ENCAP_NONE: u16 = 0;
+pub const LWTUNNEL_ENCAP_MPLS: u16 = 1;
+pub const LWTUNNEL_ENCAP_IP: u16 = 2;
+pub const LWTUNNEL_ENCAP_ILA: u16 = 3;
+pub const LWTUNNEL_ENCAP_IP6: u16 = 4;
+pub const LWTUNNEL_ENCAP_SEG6: u16 = 5;
+pub const LWTUNNEL_ENCAP_BPF: u16 = 6;
+
+// IP6 LWT encap inner attributes (RTA_ENCAP with type LWTUNNEL_ENCAP_IP6).
+pub const LWTUNNEL_IP6_UNSPEC: u16 = 0;
+pub const LWTUNNEL_IP6_ID: u16 = 1;
+pub const LWTUNNEL_IP6_DST: u16 = 2;
+pub const LWTUNNEL_IP6_SRC: u16 = 3;
+pub const LWTUNNEL_IP6_HOPLIMIT: u16 = 4;
+pub const LWTUNNEL_IP6_TC: u16 = 5;
+pub const LWTUNNEL_IP6_FLAGS: u16 = 6;
+pub const LWTUNNEL_IP6_PAD: u16 = 7;
+pub const LWTUNNEL_IP6_OPTS: u16 = 8;
 
 // NDA attribute types
 pub const NDA_UNSPEC: u16 = 0;
@@ -380,21 +486,33 @@ pub const NetlinkSocket = struct {
     fd: posix.fd_t,
     sa: linux.sockaddr.nl,
     seq: u32 = 0,
+    // Buffer holding the most recent kernel-provided extack message
+    // (populated when NETLINK_EXT_ACK is enabled and the kernel returns one).
+    extack_buf: [256]u8 = undefined,
+    extack_len: usize = 0,
+    // Whether to transparently retry dumps that the kernel marks NLM_F_DUMP_INTR.
+    retry_dump_interrupted: bool = true,
+    // Whether the kernel honored NETLINK_GET_STRICT_CHK (best-effort; falls back
+    // to userspace filtering on older kernels).
+    strict_check: bool = false,
 
     pub fn open(protocol: u32) !NetlinkSocket {
-        const fd = try posix.socket(
+        const sock_rc = linux.socket(
             linux.AF.NETLINK,
             linux.SOCK.RAW | linux.SOCK.CLOEXEC,
             protocol,
         );
-        errdefer posix.close(fd);
+        if (linux.errno(sock_rc) != .SUCCESS) return error.SocketOpenFailed;
+        const fd: posix.fd_t = @intCast(sock_rc);
+        errdefer _ = linux.close(fd);
 
         var sa = linux.sockaddr.nl{
             .pid = 0,
             .groups = 0,
         };
 
-        try posix.bind(fd, @ptrCast(&sa), @sizeOf(linux.sockaddr.nl));
+        const bind_rc = linux.bind(fd, @ptrCast(&sa), @sizeOf(linux.sockaddr.nl));
+        if (linux.errno(bind_rc) != .SUCCESS) return error.BindFailed;
 
         // read back the assigned port id
         var bound_sa: linux.sockaddr.nl = undefined;
@@ -403,14 +521,54 @@ pub const NetlinkSocket = struct {
         if (rc != 0) return error.GetSockNameFailed;
         sa.pid = bound_sa.pid;
 
-        return .{
+        var sock: NetlinkSocket = .{
             .fd = fd,
             .sa = sa,
         };
+
+        // Best-effort: enable extended ACK so the kernel reports a human-readable
+        // error message in NLMSGERR_ATTR_MSG when a request fails. Available
+        // since Linux 4.12; ignore errors on older kernels.
+        sock.enableExtAck();
+        // Best-effort: enable strict-check so kernel-side filters (e.g. ifindex
+        // in RTM_GETADDR) are honored. Available since Linux 4.20.
+        sock.enableStrictCheck();
+
+        return sock;
+    }
+
+    fn enableExtAck(self: *NetlinkSocket) void {
+        var one: u32 = 1;
+        const ptr: [*]const u8 = @ptrCast(&one);
+        const rc = linux.setsockopt(
+            self.fd,
+            SOL_NETLINK,
+            NETLINK_EXT_ACK,
+            ptr,
+            @sizeOf(u32),
+        );
+        _ = rc;
+    }
+
+    fn enableStrictCheck(self: *NetlinkSocket) void {
+        var one: u32 = 1;
+        const ptr: [*]const u8 = @ptrCast(&one);
+        const rc = linux.setsockopt(
+            self.fd,
+            SOL_NETLINK,
+            NETLINK_GET_STRICT_CHK,
+            ptr,
+            @sizeOf(u32),
+        );
+        self.strict_check = (rc == 0);
+    }
+
+    pub fn lastExtAck(self: *const NetlinkSocket) []const u8 {
+        return self.extack_buf[0..self.extack_len];
     }
 
     pub fn close(self: *NetlinkSocket) void {
-        posix.close(self.fd);
+        _ = linux.close(self.fd);
         self.fd = -1;
     }
 
@@ -427,7 +585,7 @@ pub const NetlinkSocket = struct {
             @ptrCast(&dest_sa),
             @sizeOf(linux.sockaddr.nl),
         );
-        if (rc < 0) return error.SendFailed;
+        if (linux.errno(rc) != .SUCCESS) return error.SendFailed;
     }
 
     pub fn receive(self: *NetlinkSocket, buf: []u8) !struct { len: usize, pid: u32 } {
@@ -441,6 +599,7 @@ pub const NetlinkSocket = struct {
             @ptrCast(&from_sa),
             &from_len,
         );
+        if (linux.errno(rc) != .SUCCESS) return error.RecvFailed;
         const n: usize = @intCast(rc);
         if (n < @sizeOf(NlMsgHdr)) return error.ShortRead;
         return .{ .len = n, .pid = from_sa.pid };
@@ -462,7 +621,7 @@ pub const RtAttr = struct {
         return .{
             .type_ = attr_type,
             .data = data,
-            .children = .{},
+            .children = .empty,
             .allocator = allocator,
         };
     }
@@ -562,6 +721,22 @@ pub const NetlinkRequest = struct {
     }
 
     pub fn executeAlloc(self: *NetlinkRequest, sock: *NetlinkSocket, allocator: std.mem.Allocator) ![][]u8 {
+        const max_attempts: u8 = if (sock.retry_dump_interrupted) MAX_DUMP_RETRIES else 1;
+        var attempt: u8 = 0;
+        while (true) {
+            attempt += 1;
+            const result = self.executeOnce(sock, allocator) catch |err| switch (err) {
+                error.DumpInterrupted => {
+                    if (attempt >= max_attempts) return err;
+                    continue;
+                },
+                else => return err,
+            };
+            return result;
+        }
+    }
+
+    fn executeOnce(self: *NetlinkRequest, sock: *NetlinkSocket, allocator: std.mem.Allocator) ![][]u8 {
         self.hdr.seq = sock.getNextSeq();
         self.hdr.pid = sock.sa.pid;
 
@@ -569,13 +744,14 @@ pub const NetlinkRequest = struct {
         const total = self.serialize(&send_buf);
         try sock.send(send_buf[0..total]);
 
-        var results: std.ArrayList([]u8) = .{};
+        var results: std.ArrayList([]u8) = .empty;
         errdefer {
             for (results.items) |item| allocator.free(item);
             results.deinit(allocator);
         }
 
         var recv_buf: [RECEIVE_BUFFER_SIZE]u8 = undefined;
+        var dump_interrupted = false;
 
         while (true) {
             const recv = try sock.receive(&recv_buf);
@@ -583,20 +759,37 @@ pub const NetlinkRequest = struct {
 
             var offset: usize = 0;
             while (offset + @sizeOf(NlMsgHdr) <= recv.len) {
-                const hdr: *const NlMsgHdr = @alignCast(@ptrCast(&recv_buf[offset]));
+                const hdr: *const NlMsgHdr = @ptrCast(@alignCast(&recv_buf[offset]));
 
                 if (hdr.seq != self.hdr.seq) {
                     offset += nlmsgAlign(hdr.len);
                     continue;
                 }
 
-                if (hdr.type_ == NLMSG_DONE) return try results.toOwnedSlice(allocator);
+                if (hdr.flags & NLM_F_DUMP_INTR != 0) dump_interrupted = true;
+
+                if (hdr.type_ == NLMSG_DONE) {
+                    if (dump_interrupted) {
+                        for (results.items) |item| allocator.free(item);
+                        results.deinit(allocator);
+                        return error.DumpInterrupted;
+                    }
+                    return try results.toOwnedSlice(allocator);
+                }
 
                 if (hdr.type_ == NLMSG_ERROR) {
                     if (hdr.len < @sizeOf(NlMsgHdr) + 4) return error.InvalidMessage;
                     const err_bytes = recv_buf[offset + @sizeOf(NlMsgHdr) ..][0..4];
                     const errno: i32 = @bitCast(std.mem.readInt(u32, err_bytes, native_endian));
-                    if (errno == 0) return try results.toOwnedSlice(allocator);
+                    if (errno == 0) {
+                        sock.extack_len = 0;
+                        return try results.toOwnedSlice(allocator);
+                    }
+                    // Capture extack message if the kernel sent one.
+                    const err_msg_end = offset + hdr.len;
+                    if (err_msg_end <= recv.len) {
+                        parseExtAck(sock, recv_buf[offset..err_msg_end], hdr.flags);
+                    }
                     return error.NetlinkError;
                 }
 
@@ -607,13 +800,54 @@ pub const NetlinkRequest = struct {
                     try results.append(allocator, data);
                 }
 
-                if (hdr.flags & NLM_F_MULTI == 0) return try results.toOwnedSlice(allocator);
+                if (hdr.flags & NLM_F_MULTI == 0) {
+                    if (dump_interrupted) {
+                        for (results.items) |item| allocator.free(item);
+                        results.deinit(allocator);
+                        return error.DumpInterrupted;
+                    }
+                    return try results.toOwnedSlice(allocator);
+                }
 
                 offset += nlmsgAlign(hdr.len);
             }
         }
     }
 };
+
+// Parse an NLMSG_ERROR message and copy the human-readable extack message
+// (NLMSGERR_ATTR_MSG) into the socket's extack buffer if present.
+fn parseExtAck(sock: *NetlinkSocket, msg: []const u8, flags: u16) void {
+    sock.extack_len = 0;
+    if (flags & NLM_F_ACK_TLVS == 0) return;
+    if (msg.len < @sizeOf(NlMsgHdr) + 4) return;
+
+    // Skip errno (4 bytes).
+    var off: usize = @sizeOf(NlMsgHdr) + 4;
+    // Unless the kernel set NLM_F_CAPPED, the original request header follows.
+    if (flags & NLM_F_CAPPED == 0) {
+        if (off + @sizeOf(NlMsgHdr) > msg.len) return;
+        const orig: *const NlMsgHdr = @ptrCast(@alignCast(&msg[off]));
+        const orig_payload = nlmsgAlign(orig.len);
+        if (off + orig_payload > msg.len) {
+            off = msg.len;
+        } else {
+            off += orig_payload;
+        }
+    }
+
+    if (off >= msg.len) return;
+    var iter = parseAttrs(msg[off..]);
+    while (iter.next()) |attr| {
+        if (attr.type_ == NLMSGERR_ATTR_MSG) {
+            const text_end = std.mem.indexOfScalar(u8, attr.data, 0) orelse attr.data.len;
+            const copy_len = @min(text_end, sock.extack_buf.len);
+            @memcpy(sock.extack_buf[0..copy_len], attr.data[0..copy_len]);
+            sock.extack_len = copy_len;
+            return;
+        }
+    }
+}
 
 pub fn parseAttrs(data: []const u8) AttrIterator {
     return .{ .data = data, .offset = 0 };
@@ -655,6 +889,12 @@ pub fn uint32Attr(val: u32) [4]u8 {
 pub fn uint16Attr(val: u16) [2]u8 {
     var buf: [2]u8 = undefined;
     std.mem.writeInt(u16, &buf, val, native_endian);
+    return buf;
+}
+
+pub fn uint16AttrBE(val: u16) [2]u8 {
+    var buf: [2]u8 = undefined;
+    std.mem.writeInt(u16, &buf, val, .big);
     return buf;
 }
 
