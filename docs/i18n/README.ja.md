@@ -1,4 +1,4 @@
-# ZoptiaNetlink
+# zoptia0netlink
 
 **純粋な Zig 実装の Linux netlink ネットワーク管理ライブラリ -- [Zoptia](https://zoptia.com)**
 
@@ -11,7 +11,7 @@
 
 ---
 
-`ZoptiaNetlink` は、Linux の netlink ソケットインターフェースへの直接的かつ型安全なアクセスを提供する、純粋な Zig 実装の netlink ライブラリです。ネットワークインターフェース、ルート、アドレス、ネイバーの管理に利用できます。iproute2 のプログラム的な代替として機能し、リンクの作成・削除、IP アドレスの割り当て、ルーティングテーブルの操作、ARP/NDP ネイバーエントリの更新など、Linux ネットワーク管理のあらゆる側面を、C 依存関係なし・外部コマンド呼び出しなしで、ネイティブな Zig コードから設定できます。本ライブラリは netlink ソケットプロトコル（NETLINK_ROUTE）を通じてカーネルと通信し、`ip link`、`ip addr`、`ip route`、`ip neigh` といったツールと同等の低レベル制御を、コンパイル時の安全性と構造化されたエラーハンドリングとともに提供します。
+`zoptia0netlink` は、Linux の netlink ソケットインターフェースへの直接的かつ型安全なアクセスを提供する、純粋な Zig 実装の netlink ライブラリです。ネットワークインターフェース、ルート、アドレス、ネイバーの管理に利用できます。iproute2 のプログラム的な代替として機能し、リンクの作成・削除、IP アドレスの割り当て、ルーティングテーブルの操作、ARP/NDP ネイバーエントリの更新など、Linux ネットワーク管理のあらゆる側面を、C 依存関係なし・外部コマンド呼び出しなしで、ネイティブな Zig コードから設定できます。本ライブラリは netlink ソケットプロトコル（NETLINK_ROUTE）を通じてカーネルと通信し、`ip link`、`ip addr`、`ip route`、`ip neigh` といったツールと同等の低レベル制御を、コンパイル時の安全性と構造化されたエラーハンドリングとともに提供します。
 
 ## 機能
 
@@ -56,12 +56,12 @@
 
 ### 依存関係の追加
 
-`build.zig.zon` に `zoptianetlink` を追加します：
+`build.zig.zon` に `zoptia0netlink` を追加します：
 
 ```zig
 .dependencies = .{
-    .zoptianetlink = .{
-        .url = "https://github.com/zoptia/zoptianetlink/archive/refs/heads/main.tar.gz",
+    .zoptia0netlink = .{
+        .url = "https://github.com/zoptia/zoptia0netlink/archive/refs/heads/main.tar.gz",
         // Replace with the actual hash after first `zig build`
         .hash = "...",
     },
@@ -71,7 +71,7 @@
 続いて `build.zig` に以下を記述します：
 
 ```zig
-const netlink_dep = b.dependency("zoptianetlink", .{
+const netlink_dep = b.dependency("zoptia0netlink", .{
     .target = target,
     .optimize = optimize,
 });

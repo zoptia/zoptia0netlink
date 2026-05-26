@@ -1,7 +1,7 @@
-# ZoptiaNetlink Architecture
+# zoptia0netlink Architecture
 
 This document describes the internal architecture, design decisions, and
-extension patterns of the ZoptiaNetlink library.
+extension patterns of the zoptia0netlink library.
 
 ---
 

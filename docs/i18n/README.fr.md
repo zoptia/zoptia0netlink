@@ -1,4 +1,4 @@
-# ZoptiaNetlink
+# zoptia0netlink
 
 **Bibliothèque netlink en Zig pur pour la gestion réseau sous Linux -- [Zoptia](https://zoptia.com)**
 
@@ -11,7 +11,7 @@
 
 ---
 
-`ZoptiaNetlink` est une bibliotheque netlink pour Zig qui fournit un acces direct et type-safe a l'interface de socket netlink de Linux pour gerer les interfaces reseau, les routes, les adresses et les voisins. Elle sert d'alternative programmatique a iproute2, vous permettant de configurer tous les aspects de la gestion reseau sous Linux -- creer et supprimer des liens, attribuer des adresses IP, manipuler les tables de routage et mettre a jour les entrees de voisins ARP/NDP -- le tout depuis du code natif en Zig sans dependances C et sans appels shell. La bibliotheque communique avec le noyau via le protocole de socket netlink (NETLINK_ROUTE), offrant le meme controle de bas niveau que des outils comme `ip link`, `ip addr`, `ip route` et `ip neigh`, mais avec une securite a la compilation et une gestion structuree des erreurs.
+`zoptia0netlink` est une bibliotheque netlink pour Zig qui fournit un acces direct et type-safe a l'interface de socket netlink de Linux pour gerer les interfaces reseau, les routes, les adresses et les voisins. Elle sert d'alternative programmatique a iproute2, vous permettant de configurer tous les aspects de la gestion reseau sous Linux -- creer et supprimer des liens, attribuer des adresses IP, manipuler les tables de routage et mettre a jour les entrees de voisins ARP/NDP -- le tout depuis du code natif en Zig sans dependances C et sans appels shell. La bibliotheque communique avec le noyau via le protocole de socket netlink (NETLINK_ROUTE), offrant le meme controle de bas niveau que des outils comme `ip link`, `ip addr`, `ip route` et `ip neigh`, mais avec une securite a la compilation et une gestion structuree des erreurs.
 
 ## Fonctionnalites
 
@@ -56,12 +56,12 @@
 
 ### Ajouter la dependance
 
-Ajoutez `zoptianetlink` a votre `build.zig.zon` :
+Ajoutez `zoptia0netlink` a votre `build.zig.zon` :
 
 ```zig
 .dependencies = .{
-    .zoptianetlink = .{
-        .url = "https://github.com/zoptia/zoptianetlink/archive/refs/heads/main.tar.gz",
+    .zoptia0netlink = .{
+        .url = "https://github.com/zoptia/zoptia0netlink/archive/refs/heads/main.tar.gz",
         // Replace with the actual hash after first `zig build`
         .hash = "...",
     },
@@ -71,7 +71,7 @@ Ajoutez `zoptianetlink` a votre `build.zig.zon` :
 Puis dans votre `build.zig` :
 
 ```zig
-const netlink_dep = b.dependency("zoptianetlink", .{
+const netlink_dep = b.dependency("zoptia0netlink", .{
     .target = target,
     .optimize = optimize,
 });

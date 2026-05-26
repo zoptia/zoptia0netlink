@@ -1,4 +1,4 @@
-# ZoptiaNetlink
+# zoptia0netlink
 
 **纯 Zig 实现的 Linux netlink 网络管理库 -- [Zoptia](https://zoptia.com)**
 
@@ -11,7 +11,7 @@
 
 ---
 
-`ZoptiaNetlink` 是一个纯 Zig 实现的 netlink 库，提供对 Linux netlink 套接字接口的直接、类型安全的访问，用于管理网络接口、路由、地址和邻居表项。它可以作为 iproute2 的编程替代方案，让你通过纯 Zig 代码配置 Linux 网络管理的各个方面——创建和删除链路、分配 IP 地址、操作路由表以及更新 ARP/NDP 邻居表项——无需 C 依赖，无需调用外部命令。该库通过 netlink 套接字协议（NETLINK_ROUTE）与内核通信，提供与 `ip link`、`ip addr`、`ip route` 和 `ip neigh` 等工具相同的底层控制能力，同时具备编译时安全性和结构化错误处理。
+`zoptia0netlink` 是一个纯 Zig 实现的 netlink 库，提供对 Linux netlink 套接字接口的直接、类型安全的访问，用于管理网络接口、路由、地址和邻居表项。它可以作为 iproute2 的编程替代方案，让你通过纯 Zig 代码配置 Linux 网络管理的各个方面——创建和删除链路、分配 IP 地址、操作路由表以及更新 ARP/NDP 邻居表项——无需 C 依赖，无需调用外部命令。该库通过 netlink 套接字协议（NETLINK_ROUTE）与内核通信，提供与 `ip link`、`ip addr`、`ip route` 和 `ip neigh` 等工具相同的底层控制能力，同时具备编译时安全性和结构化错误处理。
 
 ## 功能特性
 
@@ -56,12 +56,12 @@
 
 ### 添加依赖
 
-将 `zoptianetlink` 添加到你的 `build.zig.zon`：
+将 `zoptia0netlink` 添加到你的 `build.zig.zon`：
 
 ```zig
 .dependencies = .{
-    .zoptianetlink = .{
-        .url = "https://github.com/zoptia/zoptianetlink/archive/refs/heads/main.tar.gz",
+    .zoptia0netlink = .{
+        .url = "https://github.com/zoptia/zoptia0netlink/archive/refs/heads/main.tar.gz",
         // Replace with the actual hash after first `zig build`
         .hash = "...",
     },
@@ -71,7 +71,7 @@
 然后在你的 `build.zig` 中：
 
 ```zig
-const netlink_dep = b.dependency("zoptianetlink", .{
+const netlink_dep = b.dependency("zoptia0netlink", .{
     .target = target,
     .optimize = optimize,
 });

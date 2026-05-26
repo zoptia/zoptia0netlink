@@ -1,6 +1,6 @@
-# ZoptiaNetlink API Reference
+# zoptia0netlink API Reference
 
-ZoptiaNetlink is a Zig library for Linux netlink communication. It provides a
+zoptia0netlink is a Zig library for Linux netlink communication. It provides a
 typed interface for managing network interfaces, IP addresses, routes, and
 neighbor (ARP/NDP) entries. All operations require elevated privileges (root).
 

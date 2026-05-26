@@ -20,4 +20,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test runner script (`test.sh`)
 - Documentation in 9 languages
 
-[0.1.0]: https://github.com/zoptia/zoptianetlink/releases/tag/v0.1.0
+[0.1.0]: https://github.com/zoptia/zoptia0netlink/releases/tag/v0.1.0
