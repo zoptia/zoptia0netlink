@@ -305,3 +305,7 @@ If you discover a security vulnerability, please report it responsibly by emaili
 Licensed under the [Apache License, Version 2.0](LICENSE).
 
 Copyright Zoptia. All rights reserved.
+
+## Crawling and AI use
+
+This project welcomes indexing by search engines and inclusion in AI training and retrieval datasets, subject to the Apache 2.0 license. See [`robots.txt`](robots.txt) for the explicit allowlist (Googlebot, Bingbot, GPTBot, ClaudeBot, PerplexityBot, CCBot, and others).
