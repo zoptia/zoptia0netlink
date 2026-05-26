@@ -18,6 +18,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for 21 link types: device, dummy, ifb, bridge, vlan, veth, macvlan, macvtap, tuntap, vxlan, ipvlan, bond, geneve, gretap, gretun, iptun, ip6tnl, sit, vti, vrf, wireguard
 - 97 test cases (unit and integration)
 - Test runner script (`test.sh`)
-- Documentation in 9 languages
 
 [0.1.0]: https://github.com/zoptia/zoptia0netlink/releases/tag/v0.1.0

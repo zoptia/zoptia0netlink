@@ -7,8 +7,6 @@
 [![Linux only](https://img.shields.io/badge/Platform-Linux-lightgrey.svg)]()
 [![CI](https://img.shields.io/badge/CI-passing-brightgreen.svg)]()
 
-[English] | [简体中文](docs/i18n/README.zh-CN.md) | [日本語](docs/i18n/README.ja.md) | [한국어](docs/i18n/README.ko.md) | [Español](docs/i18n/README.es.md) | [Português](docs/i18n/README.pt-BR.md) | [Deutsch](docs/i18n/README.de.md) | [Français](docs/i18n/README.fr.md) | [Русский](docs/i18n/README.ru.md)
-
 ---
 
 `zoptia0netlink` is a Zig netlink library that provides direct, type-safe access to the Linux netlink socket interface for managing network interfaces, routes, addresses, and neighbors. It serves as a programmatic iproute2 alternative, letting you configure every aspect of Linux network management -- creating and deleting links, assigning IP addresses, manipulating routing tables, and updating ARP/NDP neighbor entries -- all from native Zig code with no C dependencies and no shell-outs. The library communicates with the kernel through the netlink socket protocol (NETLINK_ROUTE), giving you the same low-level control that tools like `ip link`, `ip addr`, `ip route`, and `ip neigh` provide, but with compile-time safety and structured error handling.
